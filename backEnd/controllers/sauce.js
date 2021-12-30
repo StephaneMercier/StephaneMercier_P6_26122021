@@ -61,12 +61,17 @@ exports.modifySauce = (req, res, next) => {
 };
 
 exports.deleteSauce = (req, res, next) => {
-  Sauce.findOne({ _id: req.params.id }).then((sauce) => {
-    const filename = suace.imageUrl.split("/images/")[1];
-    fs.unlink(`images/${filename}`, () => {
-      Sauce.deleteOne({ _id: req.params.id })
-        .then(() => res.status(200).json({ success }))
-        .catch((error) => res.status(400).json({ error }));
-    });
-  });
+  console.log(req.params.id);
+  Sauce.findOne({ _id: req.params.id })
+    .then((sauce) => {
+      console.log(sauce);
+      const filename = sauce.imageUrl.split("/images/")[1];
+      console.log(sauce.imageUrl.split("/images/"));
+      fs.unlink(`images/${filename}`, () => {
+        Sauce.deleteOne({ _id: req.params.id })
+          .then(() => res.status(200).json({ success }))
+          .catch((error) => res.status(400).json({ error }));
+      });
+    })
+    .catch((error) => console.log(error));
 };
