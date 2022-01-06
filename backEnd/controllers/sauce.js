@@ -12,7 +12,7 @@ exports.createSauce = (req, res, next) => {
   });
   sauce
     .save()
-    .then(() => res.status(201).json(sauceObject))
+    .then(() => res.status(201).json("Sauce created !"))
     .catch((error) => res.status(400).json({ error }));
 };
 
@@ -28,16 +28,6 @@ exports.getOneSauce = (req, res, next) => {
     });
 };
 
-exports.getAllSauce = (req, res, next) => {
-  Sauce.find()
-    .then((sauces) => {
-      res.status(200).json(sauces);
-    })
-    .catch((error) => {
-      res.status(400).json({ error });
-    });
-};
-
 exports.modifySauce = (req, res, next) => {
   const sauceObject = req.file
     ? {
@@ -48,30 +38,64 @@ exports.modifySauce = (req, res, next) => {
       }
     : { ...req.body };
   Sauce.updateOne(
-    {
-      _id: req.params.id,
-    },
+    { _id: req.params.id },
     { ...sauceObject, _id: req.params.id }
   )
-    .then(() => res.status(200))
-    .json({ message: "Sauce modifiée" })
+    .then(() =>
+      res.status(200).json({ message: "Sauce modified successfully !" })
+    )
+    .catch((error) => res.status(400).json({ error }));
+};
+
+exports.deleteSauce = (req, res, next) => {
+  Sauce.findOne({ _id: req.params.id })
+    .then((sauce) => {
+      const filename = sauce.imageUrl.split("/images/")[1];
+      console.log(sauce.imageUrl.split("/images/"));
+      fs.unlink(`images/${filename}`, () => {
+        Sauce.deleteOne({ _id: req.params.id })
+          .then(() =>
+            res.status(200).json({ message: "Sauce deleted succesfully !" })
+          )
+          .catch((error) => res.status(400).json({ error }));
+      });
+    })
+    .catch((error) => res.status(500).json({ error }));
+};
+
+exports.getAllSauce = (req, res, next) => {
+  Sauce.find()
+    .then((sauces) => {
+      res.status(200).json(sauces);
+    })
     .catch((error) => {
       res.status(400).json({ error });
     });
 };
 
-exports.deleteSauce = (req, res, next) => {
-  console.log(req.params.id);
-  Sauce.findOne({ _id: req.params.id })
-    .then((sauce) => {
-      console.log(sauce);
-      const filename = sauce.imageUrl.split("/images/")[1];
-      console.log(sauce.imageUrl.split("/images/"));
-      fs.unlink(`images/${filename}`, () => {
-        Sauce.deleteOne({ _id: req.params.id })
-          .then(() => res.status(200).json({ success }))
-          .catch((error) => res.status(400).json({ error }));
-      });
-    })
-    .catch((error) => console.log(error));
+exports.likeDislike = (req, res, next) => {
+  Sauce.updateOne(
+    { _id: req.params.id },
+    { $push: { likes: req.user.id } },
+    function (err, data) {
+      if (err) {
+        res.json(err);
+      } else {
+        console.log("liked by" + req.user.email);
+      }
+    }
+  );
 };
+
+// exports.likeDislike = (req, res, next) => {
+//   const user = req.body.userId;
+//   const like = req.body.like;
+//   const sauceId = req.params.id;
+
+//   Sauce.findOne({ _id: sauceId }).then((sauce) => {
+//     const newValue = {
+//       usersLiked: sauce.usersLiked,
+//       usersDisliked: sauce.usersDisliked,
+//     };
+//   });
+// };

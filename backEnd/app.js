@@ -1,23 +1,24 @@
 const express = require("express");
-const bodyParser = require("body-parser");
-const mongoose = require("mongoose");
-const path = require("path");
-const fs = require("fs");
-
-mongoose
-  .connect(
-    "mongodb+srv://Scrantonicity:Louboutin1@cluster0.qyu0r.mongodb.net/TheHottestReviews?retryWrites=true&w=majority",
-    { useNewUrlParser: true, useUnifiedTopology: true }
-  )
-  .then(() => console.log("connexion à MongoDB réussie !"))
-  .catch(() => console.log("connexion échouée !"));
-
 const app = express();
-app.use(bodyParser.json());
 
+const mongoose = require("mongoose");
 const sauceRoute = require("./routes/sauce");
 const userRoute = require("./routes/user");
+const path = require("path");
+let fs = require("fs");
 
+// Utilisation de ".env" pour créer des variables d'environnement qui seront sécurisées
+require("dotenv").config();
+
+mongoose
+  .connect(process.env.MONGO_CONNECT, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => console.log("connecté à MongoDB !"))
+  .catch(() => console.log("connexion échouée !"));
+
+// Autorisation d'accès depuis n'importe quelle adresse IP
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader(
@@ -30,6 +31,8 @@ app.use((req, res, next) => {
   );
   next();
 });
+
+app.use(express.json());
 app.use("/images", express.static(path.join(__dirname, "images")));
 app.use("/api/sauces", sauceRoute);
 app.use("/api/auth", userRoute);
