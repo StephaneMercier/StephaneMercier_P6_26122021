@@ -1,5 +1,6 @@
 const Sauce = require("../models/Sauce");
 const fs = require("fs");
+const req = require("express/lib/request");
 
 exports.createSauce = (req, res, next) => {
   const sauceObject = JSON.parse(req.body.sauce);
@@ -74,28 +75,122 @@ exports.getAllSauce = (req, res, next) => {
 };
 
 exports.likeDislike = (req, res, next) => {
-  Sauce.updateOne(
-    { _id: req.params.id },
-    { $push: { likes: req.user.id } },
-    function (err, data) {
-      if (err) {
-        res.json(err);
-      } else {
-        console.log("liked by" + req.user.email);
+  const user = req.body.userId;
+  const isLike = req.body.like;
+  const sauceId = req.params.id;
+
+  Sauce.findOne({ _id: sauceId })
+    .then((sauce) => {
+      console.log(sauce);
+      if (isLike === 1) {
+        if (
+          sauce.usersLiked.includes(user) ||
+          sauce.usersDisliked.includes(user)
+        ) {
+          res.status(401).json({ message: "Unauthorized" });
+        } else {
+          Sauce.updateOne(
+            { _id: sauceId },
+            { $push: { usersLiked: user }, $inc: { likes: +1 } }
+          )
+            .then(() => res.status(200).json({ message: "Sauce Liked !" }))
+            .catch((error) => res.status(400).json({ error }));
+          console.log(usersLiked);
+        }
+      } else if (isLike === 0) {
+        if (sauce.usersLiked.includes(user)) {
+          Sauce.updateOne(
+            { _id: sauceId },
+            { $pull: { usersLiked: user }, $inc: { likes: -1 } }
+          ).then(() => {
+            res
+              .status(200)
+              .json({ message: "Like cancelled" })
+              .catch((error) => {
+                res.status(400).json({ error });
+              });
+          });
+        } else if (sauce.usersDisliked.includes(user)) {
+          Sauce.updateOne(
+            { _id: sauceId },
+            { $pull: { usersDisliked: user }, $inc: { dislikes: -1 } }
+          ).then(() => res.status(200).json({ message: "Dislike cancelled" }));
+        } else {
+          res.status(401).json({ message: "You haven't liked/disliked yet" });
+        }
+      } else if (isLike === -1) {
+        if (sauce.usersLiked.user || sauce.usersDisliked.user) {
+          res.status(401).json({ message: "Sauce already liked/disliked" });
+        } else {
+          Sauce.updateOne(
+            { _id: sauceId },
+            { $push: { usersDisliked: user }, $inc: { dislikes: +1 } }
+          ).then(() => {
+            res
+              .status(201)
+              .json({ message: "Sauce disliked" })
+              .catch((error) => {
+                res.status(401).json({ error });
+              });
+          });
+        }
       }
-    }
-  );
+    })
+    .catch((error) => console.log(error));
 };
 
 // exports.likeDislike = (req, res, next) => {
 //   const user = req.body.userId;
-//   const like = req.body.like;
+//   const isLike = req.body.like;
 //   const sauceId = req.params.id;
 
-//   Sauce.findOne({ _id: sauceId }).then((sauce) => {
-//     const newValue = {
-//       usersLiked: sauce.usersLiked,
-//       usersDisliked: sauce.usersDisliked,
-//     };
-//   });
+//   console.log(user, like, sauceId);
+
+//   if (isLike == 1) {
+//     like(sauceId, user);
+//   }
+//   if (isLike == 0) {
+//     cancel();
+//   }
+//   if (isLike == -1) {
+//     dislike();
+//   }
+
+//   return res.status(200).json({ message: "Sauce likée" });
 // };
+
+// function like(sauceId, user) {
+//   Sauce.findOne({ _id: sauceId }).then((sauce) => {
+//     console.log(sauce);
+
+//     Sauce.updateOne(
+//       { _id: sauceId },
+//       {
+//         $inc: { likes: req.body.likes++ },
+//         $push: { usersLiked: req.body.usersLiked },
+//       }
+//     );
+//     sauce
+//       .save()
+//       .then(() => res.status(200).json({ message: "Sauce likée !" }))
+//       .catch((error) => res.status(400).json({ error }));
+//   });
+//   console.log("like");
+// }
+// function dislike() {
+//   console.log("dislike");
+// }
+// function cancel() {
+//   console.log("cancel");
+// }
+
+// like
+// dislike
+// cancel
+
+// Sauce.findOne({ _id: sauceId }).then((sauce) => {
+//   const newValue = {
+//     usersLiked: sauce.usersLiked,
+//     usersDisliked: sauce.usersDisliked,
+//   };
+// });
