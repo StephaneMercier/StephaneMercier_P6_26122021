@@ -5,12 +5,15 @@ const mongoose = require("mongoose");
 const sauceRoute = require("./routes/sauce");
 const userRoute = require("./routes/user");
 const path = require("path");
-const helmet = require("helmet");
+
+// Le package "helmet" permet de sécuriser les headers
+// const helmet = require("helmet");
 let fs = require("fs");
 
-// Utilisation de ".env" pour créer des variables d'environnement qui seront sécurisées
+// Utilisation de ".env" pour créer des variables d'environnement sécurisées
 require("dotenv").config();
 
+// Connexion à la base de données de mongoDB Atlas
 mongoose
   .connect(process.env.MONGO_CONNECT, {
     useNewUrlParser: true,
@@ -19,7 +22,8 @@ mongoose
   .then(() => console.log("connecté à MongoDB !"))
   .catch(() => console.log("connexion échouée !"));
 
-app.use(helmet());
+// app.use(helmet());
+
 // Autorisation d'accès depuis n'importe quelle adresse IP
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
