@@ -6,10 +6,6 @@ const sauceRoute = require("./routes/sauce");
 const userRoute = require("./routes/user");
 const path = require("path");
 
-// Le package "helmet" permet de sécuriser les headers
-// const helmet = require("helmet");
-let fs = require("fs");
-
 // Utilisation de ".env" pour créer des variables d'environnement sécurisées
 require("dotenv").config();
 
@@ -21,8 +17,6 @@ mongoose
   })
   .then(() => console.log("connecté à MongoDB !"))
   .catch(() => console.log("connexion échouée !"));
-
-// app.use(helmet());
 
 // Autorisation d'accès depuis n'importe quelle adresse IP
 app.use((req, res, next) => {
